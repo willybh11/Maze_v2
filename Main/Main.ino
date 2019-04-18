@@ -1,7 +1,9 @@
 
 #include <time.h>
 
-int pins[4] = {5, 6, 7, 8}; //NESW
+int pins[4] = {5, 6, 7, 8}; //NESW //Blue, Green, Yellow, White
+
+int lightOrder[4] = {8, 5, 7, 6};
 
 int starts[3][2] = {
   {0, 9}, // marked 1
@@ -17,6 +19,28 @@ int col = 0;
 #define buzzerPin 13
 #define togglePin 12
 #define resetPin 10
+
+int melody[8] = {
+  293.66,
+  293.66,
+  293.66,
+  293.66,
+  329.63,
+  293.66,
+  329.63,
+  369.99
+};
+
+int durations[8] = {
+  200,
+  100,
+  100,
+  200,
+  200,
+  200,
+  200,
+  800
+};
 
 bool grid[10][10][4] = { // true: connection | false: wall
   { // row 0
@@ -173,12 +197,13 @@ void loop() {
 
   updatePos();
   updatePins();
+  winCheck();
 
 }
 
 void updatePins() {
   for (int i = 0; i < 4; i++) {
-    digitalWrite(pins[i], !grid[row][col][i]);
+    digitalWrite(pins[i], grid[row][col][i]);
   }
   digitalWrite(2, HIGH);
 }
@@ -195,7 +220,7 @@ void printPos() {
 
 void updatePos() {
 
-  if (analogRead(x_pin) > 900) {
+  if (analogRead(y_pin) < 100) {
     if (grid[row][col][1]) {
       tone(buzzerPin, 1000, 50);
       col++; // no wall east
@@ -203,7 +228,7 @@ void updatePos() {
     else tone(buzzerPin, 50, 200);
     delay(200);
     printPos();
-  } else if (analogRead(x_pin) < 100) {
+  } else if (analogRead(y_pin) > 900) {
     if (grid[row][col][3]) {
       tone(buzzerPin, 1000, 50);
       col--; // no wall west
@@ -211,7 +236,7 @@ void updatePos() {
     else tone(buzzerPin, 50, 200);
     delay(200);
     printPos();
-  } else if (analogRead(y_pin) > 900) {
+  } else if (analogRead(x_pin) > 900) {
     if (grid[row][col][2]) {
       tone(buzzerPin, 1000, 50);
       row++; // no wall south
@@ -219,7 +244,7 @@ void updatePos() {
     else tone(buzzerPin, 50, 200);
     delay(200);
     printPos();
-  } else if (analogRead(y_pin) < 100) {
+  } else if (analogRead(x_pin) < 100) {
     if (grid[row][col][0]) {
       tone(buzzerPin, 1000, 50);
       row--; // now all north
@@ -260,11 +285,26 @@ void hardReset() {
   }
 }
 
+void winCheck() {
+  if (row == 9 && col == 9) {
+    winSound();
+    resetBoard();
+  }
+}
+
+void winSound() {
+  for (int i = 0; i < 8; i++) {
+    digitalWrite(lightOrder[i % 4], HIGH);
+    tone(buzzerPin, melody[i]);
+    delay(durations[i] - 20);
+    noTone(buzzerPin);
+    digitalWrite(lightOrder[i % 4], LOW);
+    delay(20);
+  }
+}
+
 int sudoRand(int maximum) {
-  Serial.print(millis());
-  Serial.print(" --> ");
   delay(1);
-  Serial.println((millis()) % maximum);
   return ((millis())) % maximum;
 }
 
