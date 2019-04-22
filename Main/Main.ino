@@ -184,7 +184,13 @@ void setup() {
 }
 
 void loop() {
+  resetCheck();
+  updatePos();
+  updatePins();
+  winCheck();
+}
 
+void resetCheck() {
   if (digitalRead(resetPin) == LOW) {
     tone(buzzerPin, 450, 250);
     delay(250);
@@ -194,11 +200,6 @@ void loop() {
       delay(10);
     }
   }
-
-  updatePos();
-  updatePins();
-  winCheck();
-
 }
 
 void updatePins() {
@@ -295,9 +296,8 @@ void winCheck() {
 void winSound() {
   for (int i = 0; i < 8; i++) {
     digitalWrite(lightOrder[i % 4], HIGH);
-    tone(buzzerPin, melody[i]);
+    tone(buzzerPin, melody[i], durations[i] - 20);
     delay(durations[i] - 20);
-    noTone(buzzerPin);
     digitalWrite(lightOrder[i % 4], LOW);
     delay(20);
   }
@@ -306,9 +306,4 @@ void winSound() {
 int sudoRand(int maximum) {
   delay(1);
   return ((millis())) % maximum;
-}
-
-void resetNoise() {
-  //maybe don't use this
-  return;
 }
